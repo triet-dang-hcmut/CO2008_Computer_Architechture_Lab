@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MARS: Mở file trong MARS + Assemble (F3)",
+      "type": "shell",
+      "command": "Start-Process javaw -ArgumentList '-jar','\"${workspaceFolder}\\MarsOpen.jar\"','\"${file}\"','a'",
+      "presentation": { "reveal": "never" },
+      "problemMatcher": []
+    },
+    {
+      "label": "MARS: Mở file trong MARS (không Assemble)",
+      "type": "shell",
+      "command": "Start-Process javaw -ArgumentList '-jar','\"${workspaceFolder}\\MarsOpen.jar\"','\"${file}\"'",
+      "presentation": { "reveal": "never" },
+      "problemMatcher": []
+    },
+    {
+      "label": "MARS: Assemble",
+      "type": "shell",
+      "command": "java",
+      "args": ["-jar", "${workspaceFolder}/Mars4_5.jar", "nc", "a", "${file}"],
+      "problemMatcher": []
+    },
+    {
+      "label": "MARS: Run",
+      "type": "shell",
+      "command": "java",
+      "args": ["-jar", "${workspaceFolder}/Mars4_5.jar", "nc", "sm", "${file}"],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "MARS: Mở giao diện",
+      "type": "shell",
+      "command": "Start-Process javaw -ArgumentList '-jar','\"${workspaceFolder}\\Mars4_5.jar\"'",
+      "problemMatcher": []
+    }
+  ]
+}
