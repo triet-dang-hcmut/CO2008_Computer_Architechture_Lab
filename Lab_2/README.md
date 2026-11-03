@@ -62,3 +62,69 @@ LCM = (6 / 3) × 45 = 90.
 File code (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/file_asm/ex2_lab2.asm>\
 Video demo (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/video/video_ex2_lab2.mp4>\
 Video demo (Google Drive): <https://drive.google.com/file/d/1Sm089Q-Gfa0SmiXE5hZQzeVOEk_qr_3y/view?usp=sharing>
+
+## Bài 3 – Phần tử lớn thứ hai trong mảng
+
+Nhập mảng 10 số nguyên (lời nhắc `Please insert an element: `), tìm giá trị lớn thứ hai và tất cả các chỉ số của nó. Ví dụ mảng 1, 2, 7, -7, 3, 7, 4, 6, 8, 7 thì in `Second largest value is 7, found in index 2, 5, 9`.
+
+Giá trị lớn thứ hai là **giá trị lớn nhất trong các phần tử nhỏ hơn max**, các giá trị trùng nhau chỉ tính một lần (ví dụ có hai số 8 lớn nhất thì giá trị lớn thứ hai vẫn là số nhỏ hơn 8). Nếu mọi phần tử bằng nhau thì không tồn tại giá trị lớn thứ hai, chương trình in `There is no second largest value!`.
+
+**Cách làm:**
+
+- **Nhập mảng (`input`):** dành 40 byte bằng `.space 40`. `$t0` là con trỏ, `$t1` đếm số phần tử đã nhập (từ 1). Mỗi vòng đọc số bằng `syscall 5`, lưu bằng `sw`; `$t1 = 10` thì sang in mảng.
+- **In lại mảng (`printarray`)** dạng `Array: [a0, ..., a9]` để dễ kiểm tra, chỉ in `", "` khi chưa phải phần tử cuối.
+- **Bước 1 – tìm max (`max`/`loop_max`):** `$s0 = array[0]` (`lw`), duyệt `$t2` từ `array[1]` tới `array[9]`; phần tử x lớn hơn max (`blt $s0, $t3, change_max`) thì max = x.
+- **Bước 2 – tìm second và các chỉ số trong một lần duyệt (`second_max`/`loop_second_max`):**
+  - `$s1` là second hiện tại, `$t2` là cờ đã có second chưa (ban đầu 0; không gán sẵn second = `array[0]` vì `array[0]` có thể là max).
+  - Mảng `index` (`.space 40`) lưu các chỉ số của second; `$s3` là con trỏ ghi, `$s2` đếm số chỉ số. `$t0` trỏ tới `array[i]`, `$t1` là i.
+  - Với mỗi x = `array[i]`:
+    - x = max: bỏ qua.
+    - Chưa có second hoặc x > second (`new_second`): second = x, bật cờ, **xóa danh sách chỉ số cũ** (`$s2 = 0`, `$s3` về `index[0]`) rồi lưu i.
+    - x = second (`update_index`): lưu thêm i (`sw $t1, 0($s3)`, tăng `$s2` và `$s3`).
+    - x < second: bỏ qua.
+  - Duyệt xong mà cờ vẫn bằng 0 (`check`) thì mọi phần tử bằng nhau, nhảy tới `error`.
+- **In kết quả (`printvalue`/`loop_printindex`):** in giá trị `$s1`, rồi `$s2` chỉ số đầu của mảng `index` cách nhau bởi `", "`.
+
+| i | x | Xử lý (max = 8) | second | Mảng `index` |
+|:---:|:---:|---|:---:|:---:|
+| 0 | 1 | chưa có second → second mới | 1 | 0 |
+| 1 | 2 | 2 > 1 → second mới, xóa danh sách cũ | 2 | 1 |
+| 2 | 7 | 7 > 2 → second mới, xóa danh sách cũ | 7 | 2 |
+| 3 | −7 | −7 < 7 → bỏ qua | 7 | 2 |
+| 4 | 3 | 3 < 7 → bỏ qua | 7 | 2 |
+| 5 | 7 | 7 = second → thêm chỉ số | 7 | 2, 5 |
+| 6 | 4 | 4 < 7 → bỏ qua | 7 | 2, 5 |
+| 7 | 6 | 6 < 7 → bỏ qua | 7 | 2, 5 |
+| 8 | 8 | 8 = max → bỏ qua | 7 | 2, 5 |
+| 9 | 7 | 7 = second → thêm chỉ số | 7 | 2, 5, 9 |
+
+File code (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/file_asm/ex3_lab2.asm>\
+Video demo (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/video/video_ex3_lab2.mp4>\
+Video demo (Google Drive): <https://drive.google.com/file/d/1PfZZQQNDgNWt2v2_mCze-GZVa_w_I_hy/view?usp=sharing>
+
+## Bài 4 – Giai thừa (đệ quy)
+
+Nhập một số nguyên không âm và in giai thừa của nó. Ví dụ nhập 5 thì in `120`; nhập -2 thì in `A factorial for your number can not be found`.
+
+**Cách làm:**
+
+- **Nhập và kiểm tra n:** đọc bằng `syscall 5`, `blt $v0, 0, error` kiểm tra n < 0 thì in thông báo lỗi và kết thúc. Hợp lệ thì chép n vào `$s0`, gọi `jal factorial` rồi `j print` để in kết quả `$s1`.
+- **Thủ tục đệ quy `factorial`** (tham số n trong `$s0`, kết quả trong `$s1`): factorial(n) = 1 nếu n ≤ 1, ngược lại factorial(n) = n × factorial(n − 1).
+  - Đầu thủ tục cấp 8 byte stack (`addi $sp, $sp, -8`), cất `$ra` vào `4($sp)` và n vào `0($sp)`.
+  - n ≤ 1 (`bgt $s0, 1, factorial_recursion` không nhảy): `$s1 = 1` rồi trả về (gồm cả 0! = 1).
+  - n > 1 (`factorial_recursion`): giảm `$s0` còn n − 1, gọi `jal factorial` để được `$s1 = (n − 1)!`, lấy lại n của lần gọi này bằng `lw $s0, 0($sp)` rồi `mul $s1, $s1, $s0`.
+  - Cuối thủ tục (`factorial_return`) khôi phục `$ra`, trả lại 8 byte stack và `jr $ra`.
+- **Vì sao cất cả `$ra` và n:** `jal factorial` bên trong ghi đè `$ra`, không cất thì mất địa chỉ quay về (cuối cùng là về `main`). Sau khi lời gọi đệ quy trả về vẫn phải nhân với n, mà trong lúc đệ quy `$s0` đã bị giảm, nên mỗi lần gọi phải cất n của riêng nó.
+- **Lưu ý:** `mul` chỉ giữ 32 bit thấp nên kết quả đúng với 0 ≤ n ≤ 12 (12! = 479 001 600); từ 13! trở đi bị tràn số nguyên 32 bit (nhập 13 in ra 1932053504).
+
+| Lời gọi | `$s0` (n) | Cất trên stack | Giá trị trả về (`$s1`) |
+|---|:---:|---|---|
+| factorial(5) | 5 | `$ra` (về `main`), 5 | 24 × 5 = 120 |
+| factorial(4) | 4 | `$ra`, 4 | 6 × 4 = 24 |
+| factorial(3) | 3 | `$ra`, 3 | 2 × 3 = 6 |
+| factorial(2) | 2 | `$ra`, 2 | 1 × 2 = 2 |
+| factorial(1) | 1 | `$ra`, 1 | 1 (vì n ≤ 1) |
+
+File code (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/file_asm/ex4_lab2.asm>\
+Video demo (Github): <https://github.com/triet-dang-hcmut/CO2008_Computer_Architechture_Lab/blob/main/Lab_2/video/video_ex4_lab2.mp4>\
+Video demo (Google Drive): <https://drive.google.com/file/d/1kuFwUclIoVheWIu7g4CctagLTiQv_LiW/view?usp=sharing>
